@@ -142,6 +142,15 @@ ifeq ($(strip $(CONVERT_TO_PROTON_C)), yes)
     include platforms/chibios/QMK_PROTON_C/convert_to_proton_c.mk
 endif
 
+ifeq ($(strip $(CTPIM)), yes)
+  CONVERT_TO_PICO_MICRO=yes
+endif
+
+ifeq ($(strip $(CONVERT_TO_PICO_MICRO)), yes)
+    include platforms/pico/convert_to_pico_micro.mk
+endif
+
+
 ifneq ($(FORCE_LAYOUT),)
     TARGET := $(TARGET)_$(FORCE_LAYOUT)
 endif
@@ -231,14 +240,20 @@ ifdef MCU_FAMILY
     ifeq ($(MCU_FAMILY),NRF51)
         $(info "PLATFORM NRF5")
         PLATFORM=NRF_SDK
-    	PLATFORM_KEY=nrf
+        PLATFORM_KEY=nrf
         FIRMWARE_FORMAT=hex
     endif
     ifeq ($(MCU_FAMILY),NRF52)
         $(info "PLATFORM NRF5")
         PLATFORM=NRF_SDK
-    	PLATFORM_KEY=nrf
+        PLATFORM_KEY=nrf
         FIRMWARE_FORMAT=hex
+    endif
+    ifeq ($(MCU_FAMILY),PICO)
+        $(info "PLATFORM RP2040")
+        PLATFORM=PICO_SDK
+        PLATFORM_KEY=pico
+        FIRMWARE_FORMAT=elf
     endif
 else ifdef ARM_ATSAM
     PLATFORM=ARM_ATSAM
@@ -402,7 +417,7 @@ $(KEYMAP_OUTPUT)_DEFS := $(OPT_DEFS) $(GFXDEFS) \
 -DQMK_SUBPROJECT -DQMK_SUBPROJECT_H -DQMK_SUBPROJECT_CONFIG_H
 $(KEYMAP_OUTPUT)_INC :=  $(VPATH) $(EXTRAINCDIRS)
 $(KEYMAP_OUTPUT)_CONFIG := $(CONFIG_H)
-$(KEYBOARD_OUTPUT)_SRC := $(CHIBISRC) $(GFXSRC) $(NRFSRC)
+$(KEYBOARD_OUTPUT)_SRC := $(CHIBISRC) $(GFXSRC) $(NRFSRC) $(PROTOCOLSRC)
 $(KEYBOARD_OUTPUT)_DEFS := $(PROJECT_DEFS) $(GFXDEFS)
 $(KEYBOARD_OUTPUT)_INC := $(PROJECT_INC) $(GFXINC)
 $(KEYBOARD_OUTPUT)_CONFIG := $(PROJECT_CONFIG)
