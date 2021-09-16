@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* USB Device descriptor parameter */
 #define VENDOR_ID    0xFEED
-#define PRODUCT_ID   0x0000
+#define PRODUCT_ID   0x0F0A
 #define DEVICE_VER   0x0001
 #define MANUFACTURER sekigon-gonnoc
 #define PRODUCT      rp2040_HNA
@@ -48,11 +48,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define UNUSED_PINS
 
 /* COL2ROW, ROW2COL */
-#define DIODE_DIRECTION COL2ROW
+//#define DIODE_DIRECTION COL2ROW
+#define DIODE_DIRECTION ROW2COL
 
 #define RGB_DI_PIN 28
 #define RGBLED_NUM 12
 #define RGBLIGHT_ANIMATIONS
+#define RGBLIGHT_SLEEP
+#define RGBLIGHT_DEFAULT_HUE 106
+#define RGBLIGHT_DEFAULT_VAL 150
+#define RGBLIGHT_DEFAULT_MODE RGBLIGHT_MODE_RAINBOW_SWIRL
+
 /*
  * Split Keyboard specific options, make sure you have 'SPLIT_KEYBOARD = yes' in your rules.mk, and define SOFT_SERIAL_PIN.
  */
