@@ -35,9 +35,11 @@
 // Explicitly override it if the keyboard uses a microcontroller with
 // more EEPROM *and* it makes sense to increase it.
 #ifndef DYNAMIC_KEYMAP_EEPROM_MAX_ADDR
-#    if defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB647__) || defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB1287__)
+#    if defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB647__)
 #        define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 2047
-#    elif defined(__AVR_AT90USB162__)
+#    elif defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB1287__)
+#        define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 4095
+#    elif defined(__AVR_ATmega16U2__) || defined(__AVR_ATmega16U4__) || defined(__AVR_AT90USB162__) || defined(__AVR_ATtiny85__)
 #        define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 511
 #    else
 #        define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 1023
@@ -101,6 +103,7 @@ void dynamic_keymap_set_keycode(uint8_t layer, uint8_t row, uint8_t column, uint
     eeprom_update_byte(address + 1, (uint8_t)(keycode & 0xFF));
 }
 
+__attribute__((weak))
 void dynamic_keymap_reset(void) {
     // Reset the keymaps in EEPROM to what is in flash.
     // All keyboards using dynamic keymaps should define a layout
@@ -143,6 +146,7 @@ void dynamic_keymap_set_buffer(uint16_t offset, uint16_t size, uint8_t *data) {
 }
 
 // This overrides the one in quantum/keymap_common.c
+#ifndef OVERRIDE_KEYMAP_KEY_TO_KEYCODE
 uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
     if (layer < DYNAMIC_KEYMAP_LAYER_COUNT && key.row < MATRIX_ROWS && key.col < MATRIX_COLS) {
         return dynamic_keymap_get_keycode(layer, key.row, key.col);
@@ -150,6 +154,7 @@ uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
         return KC_NO;
     }
 }
+#endif
 
 uint8_t dynamic_keymap_macro_get_count(void) { return DYNAMIC_KEYMAP_MACRO_COUNT; }
 

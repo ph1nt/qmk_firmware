@@ -20,6 +20,14 @@ ifneq ($(PICO_SDK_EXIST),true)
 $(error pico-sdk does not found at PICO_SDK_PATH. Please setup pico-sdk.)
 endif
 
+GIT_DESCRIBE = $(shell git describe --tags --long --dirty="\\*")
+
+ifneq ($(PICO_FLASH_SPI_CLKDIV),)
+	CFLAGS += -DPICO_FLASH_SPI_CLKDIV=$(PICO_FLASH_SPI_CLKDIV)
+else
+	CFLAGS += -DPICO_FLASH_SPI_CLKDIV=4
+endif
+
 CFLAGS += -DCFG_TUSB_DEBUG=0
 CFLAGS += -DCFG_TUSB_MCU=OPT_MCU_RP2040
 CFLAGS += -DCFG_TUSB_OS=OPT_OS_PICO
@@ -64,6 +72,7 @@ CFLAGS += -DPICO_NO_HARDWARE=0
 CFLAGS += -DPICO_ON_DEVICE=1
 CFLAGS += -DPICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
 CFLAGS += -DPICO_TARGET_NAME=\"$(TARGET)\"
+CFLAGS += -DPICO_PROGRAM_VERSION_STRING=\"$(GIT_DESCRIBE)\"
 CFLAGS += -DPICO_USE_BLOCKED_RAM=0
 CFLAGS += -I$(PICO_SDK_PATH)
 CFLAGS += -I$(PICO_SDK_PATH)/src
@@ -76,12 +85,15 @@ CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/pico_platform/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2040/hardware_regs/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_base/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2040/hardware_structs/include
+CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_adc/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_claim/include
+CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_dma/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_sync/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_uart/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_i2c/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_spi/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_pio/include
+CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_pwm/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_divider/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/common/pico_time/include
 CFLAGS += -I$(PICO_SDK_PATH)/src/rp2_common/hardware_timer/include
@@ -289,75 +301,96 @@ LDFLAGS += -Wl,--wrap=vprintf
 LDFLAGS += -Wl,--wrap=puts
 LDFLAGS += -Wl,--wrap=putchar
 LDFLAGS += -Wl,--wrap=getchar
+LDFLAGS += -Wl,--print-memory-usage
 
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdlib/stdlib.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_flash/flash.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_gpio/gpio.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_claim/claim.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_platform/platform.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_sync/sync.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_uart/uart.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_i2c/i2c.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_spi/spi.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_pio/pio.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_divider/divider.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_time/time.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_time/timeout_helper.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_timer/timer.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_sync/sem.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_sync/lock_core.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_sync/mutex.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_sync/critical_section.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_util/datetime.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_util/pheap.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/common/pico_util/queue.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_runtime/runtime.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_clocks/clocks.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_irq/irq.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_irq/irq_handler_chain.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_pll/pll.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_vreg/vreg.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_watchdog/watchdog.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_xosc/xosc.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_printf/printf.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_bit_ops/bit_ops_aeabi.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_bootrom/bootrom.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_divider/divider.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_aeabi.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_init_rom.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_math.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_v1_rom_shim.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_int64_ops/pico_int64_ops_aeabi.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_aeabi.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_init_rom.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_math.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_v1_rom_shim.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_malloc/pico_malloc.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_mem_ops/mem_ops_aeabi.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_standard_link/crt0.S
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_standard_link/new_delete.cpp
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_standard_link/binary_info.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdio/stdio.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdio_uart/stdio_uart.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_bootsel_via_double_reset/pico_bootsel_via_double_reset.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/hw/bsp/rp2040/family.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/portable/raspberrypi/rp2040/dcd_rp2040.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/portable/raspberrypi/rp2040/rp2040_usb.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/device/usbd.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/device/usbd_control.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/audio/audio_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/cdc/cdc_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/dfu/dfu_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/dfu/dfu_rt_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/hid/hid_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/midi/midi_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/msc/msc_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/net/net_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/usbtmc/usbtmc_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/vendor/vendor_device.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/tusb.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/lib/tinyusb/src/common/tusb_fifo.c
-PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_fix/rp2040_usb_device_enumeration/rp2040_usb_device_enumeration.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdlib/stdlib.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_adc/adc.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_sync/sync.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_flash/flash.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_gpio/gpio.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_claim/claim.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_dma/dma.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_platform/platform.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_sync/sync.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_uart/uart.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_i2c/i2c.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_spi/spi.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_pio/pio.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_divider/divider.S
+SRC += $(PICO_SDK_PATH)/src/common/pico_time/time.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_time/timeout_helper.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_timer/timer.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_sync/sem.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_sync/lock_core.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_sync/mutex.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_sync/critical_section.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_util/datetime.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_util/pheap.c
+SRC += $(PICO_SDK_PATH)/src/common/pico_util/queue.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_runtime/runtime.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_clocks/clocks.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_irq/irq.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_irq/irq_handler_chain.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_pll/pll.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_vreg/vreg.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_watchdog/watchdog.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_xosc/xosc.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_printf/printf.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_bit_ops/bit_ops_aeabi.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_bootrom/bootrom.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_divider/divider.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_aeabi.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_init_rom.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_math.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_double/double_v1_rom_shim.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_int64_ops/pico_int64_ops_aeabi.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_aeabi.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_init_rom.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_math.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_float/float_v1_rom_shim.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_malloc/pico_malloc.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_mem_ops/mem_ops_aeabi.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_standard_link/crt0.S
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_standard_link/new_delete.cpp
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_standard_link/binary_info.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdio/stdio.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdio_uart/stdio_uart.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_bootsel_via_double_reset/pico_bootsel_via_double_reset.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/hw/bsp/rp2040/family.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/portable/raspberrypi/rp2040/dcd_rp2040.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/portable/raspberrypi/rp2040/rp2040_usb.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/device/usbd.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/device/usbd_control.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/audio/audio_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/cdc/cdc_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/dfu/dfu_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/dfu/dfu_rt_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/hid/hid_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/midi/midi_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/msc/msc_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/usbtmc/usbtmc_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/class/vendor/vendor_device.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/tusb.c
+SRC += $(PICO_SDK_PATH)/lib/tinyusb/src/common/tusb_fifo.c
+SRC += $(PICO_SDK_PATH)/src/rp2_common/pico_fix/rp2040_usb_device_enumeration/rp2040_usb_device_enumeration.c
+
+BOOT2INC_DIR += -I$(PROTOCOL_DIR)
+BOOT2INC_DIR += -I$(PICO_SDK_PATH)/src/rp2_common/boot_stage2/include
+BOOT2INC_DIR += -I$(PICO_SDK_PATH)/src/rp2_common/boot_stage2/asminclude
+
+$(KEYBOARD_OUTPUT)/src/bs2_default.o: $(PICO_SDK_PATH)/src/rp2_common/boot_stage2/compile_time_choice.S $(KEYBOARD_OUTPUT)/cflags.txt
+	$(CC) $(CFLAGS) $(BOOT2INC_DIR) -c -o $@ $^
+
+$(KEYBOARD_OUTPUT)/src/bs2_default.elf: $(KEYBOARD_OUTPUT)/src/bs2_default.o
+	$(CC) $(CFLAGS) -Wl,--build-id=none -nostartfiles -Wl,--script=$(PICO_SDK_PATH)/src/rp2_common/boot_stage2/boot_stage2.ld $^ -o $@
+
+
+$(KEYBOARD_OUTPUT)/src/bs2_default.bin: $(KEYBOARD_OUTPUT)/src/bs2_default.elf
+	$(OBJCOPY) -Obinary $^ $@
+
+$(KEYBOARD_OUTPUT)/src/bs2_default_padded_checksummed.S: $(KEYBOARD_OUTPUT)/src/bs2_default.bin
+	$(PICO_SDK_PATH)/src/rp2_common/boot_stage2/pad_checksum -s 0xffffffff $^ $@
+
 
 flash: $(BUILD_DIR)/$(TRAGET).elf cpfirmware sizeafter
 	until lsusb | grep -q $(RP2BOOT_ID); do\
@@ -367,4 +400,4 @@ flash: $(BUILD_DIR)/$(TRAGET).elf cpfirmware sizeafter
 	$(PICOTOOL) load $(BUILD_DIR)/$(TARGET).elf && $(PICOTOOL) reboot
 
 uf2: $(BUILD_DIR)/$(TARGET).bin
-	./util/uf2conv.py -f 0xe48bff56 -b 0x10000000 -o $(TARGET).uf2 $^
+	./util/uf2conv.py -f 0xe48bff56 -b 0x10000000 -o $(TARGET).uf2 $(TARGET).bin

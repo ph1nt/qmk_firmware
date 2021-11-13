@@ -82,5 +82,9 @@ fi
 	-e SKIP_GIT="$SKIP_GIT" \
 	-e MAKEFLAGS="$MAKEFLAGS" \
 	-e USER="" \
+<<<<<<< HEAD
 	qmkfm/base_container \
+=======
+	qmkfm/qmk_cli \
+>>>>>>> upstream/rp2040
 	make "$keyboard${keymap:+:$keymap}${target:+:$target}"

@@ -256,12 +256,20 @@ void vendor_report_parser(uint16_t usage_id, hid_report_member_t const *member, 
     }
 }
 
+<<<<<<< HEAD
+=======
+__attribute__((weak))
+>>>>>>> upstream/rp2040
 void system_report_hook(uint16_t report) {
     host_system_send(report);
     wait_ms(TAP_CODE_DELAY);
     host_system_send(0);
 }
 
+<<<<<<< HEAD
+=======
+__attribute__((weak))
+>>>>>>> upstream/rp2040
 void consumer_report_hook(uint16_t report) {
     host_consumer_send(report);
     wait_ms(TAP_CODE_DELAY);

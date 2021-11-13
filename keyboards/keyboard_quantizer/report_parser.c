@@ -15,9 +15,12 @@ typedef struct {
                  uint8_t len);
 } report_parser_table_t;
 
+<<<<<<< HEAD
 __attribute__((weak)) void system_report_hook(uint16_t report) {}
 __attribute__((weak)) void consumer_report_hook(uint16_t report) {}
 
+=======
+>>>>>>> upstream/rp2040
 void keyboard_report_parser(hid_report_member_t const *member,
                             uint8_t const *data, uint8_t len);
 void mouse_report_parser(hid_report_member_t const *member, uint8_t const *data,
@@ -202,8 +205,17 @@ void mouse_report_parser(hid_report_member_t const *member, uint8_t const *data,
       result.h = val;
       break;
 
+<<<<<<< HEAD
     default:
       result.undefined = val;
+=======
+    case 0xFF000000: // SlimBlade, Button 3,4
+      result.button |= (val << ((bit_idx_cur + 2) & 0x0F));
+      break;
+
+    default:
+      result.undefined |= (val << (bit_idx_cur & 0x0F));
+>>>>>>> upstream/rp2040
       break;
     }
 
@@ -218,9 +230,24 @@ void system_report_parser(hid_report_member_t const *member,
   uint16_t result = 0;
   uint16_t bit_idx = 0;
 
+<<<<<<< HEAD
   if (member != NULL) {
     result = parse_value(member, data, &bit_idx);
     system_report_hook(result);
+=======
+  while (member != NULL) {
+    result = parse_value(member, data, &bit_idx);
+
+    if (result != 0) {
+      if (member->global.report_size == 1) {
+        system_report_hook(member->local.usage);
+      } else {
+        system_report_hook(result);
+      }
+    }
+
+    member = member->next;
+>>>>>>> upstream/rp2040
   }
 }
 
@@ -229,8 +256,23 @@ void consumer_report_parser(hid_report_member_t const *member,
   uint16_t result;
   uint16_t bit_idx = 0;
 
+<<<<<<< HEAD
   if (member != NULL) {
     result = parse_value(member, data, &bit_idx);
     consumer_report_hook(result);
+=======
+  while (member != NULL) {
+    result = parse_value(member, data, &bit_idx);
+
+    if (result != 0) {
+      if (member->global.report_size == 1) {
+        consumer_report_hook(member->local.usage);
+      } else {
+        consumer_report_hook(result);
+      }
+    }
+
+    member = member->next;
+>>>>>>> upstream/rp2040
   }
 }
