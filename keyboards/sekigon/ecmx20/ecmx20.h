@@ -16,12 +16,28 @@
 
 #pragma once
 
-#include <stdint.h>
-#include "report.h"
+#include "quantum.h"
 
-/* declarations */
-uint8_t keyboard_leds(void);
-void    send_keyboard(report_keyboard_t *report);
-void    send_mouse(report_mouse_t *report);
-void    send_system(uint16_t data);
-void    send_consumer(uint16_t data);
+/* This is a shortcut to help you visually see your layout.
+ *
+ * The first section contains all of the arguments representing the physical
+ * layout of the board and position of the keys.
+ *
+ * The second converts the arguments into a two-dimensional array which
+ * represents the switch matrix.
+ */
+#define LAYOUT( \
+                   k50, k51, k52, \
+    k00, k01, k02, k03, \
+    k10, k11, k12, k13, \
+    k20, k21, k22, k23, \
+    k30, k31, k32, k33, \
+    k40, k41, k42, k43  \
+) { \
+    { k00, k01, k02, k03 }, \
+    { k10, k11, k12, k13 }, \
+    { k20, k21, k22, k23 }, \
+    { k30, k31, k32, k33 }, \
+    { k40, k41, k42, k43 }, \
+    { k50, k51, k52,   0 } \
+}

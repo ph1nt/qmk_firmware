@@ -1,4 +1,4 @@
-/* Copyright 2021 sekigon-gonnoc
+/* Copyright 2020 sekigon-gonnoc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +14,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+//
+// Scan EC switch matrix using 74HC7051
+// Define MUX_SEL_PINS, DISCHARGE_PIN, and ANALOG_PORT to compile
+//
+
 #pragma once
 
 #include <stdint.h>
-#include "report.h"
+#include <stdbool.h>
 
-/* declarations */
-uint8_t keyboard_leds(void);
-void    send_keyboard(report_keyboard_t *report);
-void    send_mouse(report_mouse_t *report);
-void    send_system(uint16_t data);
-void    send_consumer(uint16_t data);
+#include "matrix.h"
+
+typedef struct {
+    uint16_t low_threshold;   // threshold for key release
+    uint16_t high_threshold;  // threshold for key press
+} ecsm_config_t;
+
+int      ecsm_init(ecsm_config_t const* const ecsm_config);
+void     ecsm_get_config(ecsm_config_t* ecsm_config);
+bool     ecsm_matrix_scan(matrix_row_t current_matrix[]);
+void     ecsm_dprint_matrix(void);
+
+#ifdef ECS_VELOCITY_ENABLED
+int16_t ecsm_get_velocity(uint8_t row, uint8_t col);
+void    ecsm_dprint_velocity(void);
+#endif

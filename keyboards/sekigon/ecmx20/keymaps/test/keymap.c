@@ -13,15 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include QMK_KEYBOARD_H
+#include "ec_switch_matrix.h"
 
-#pragma once
+const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+    [0]={{KC_NO}}
+};
 
-#include <stdint.h>
-#include "report.h"
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    return true;
+}
 
-/* declarations */
-uint8_t keyboard_leds(void);
-void    send_keyboard(report_keyboard_t *report);
-void    send_mouse(report_mouse_t *report);
-void    send_system(uint16_t data);
-void    send_consumer(uint16_t data);
+bool encoder_update_user(uint8_t index, bool clockwise) {
+    dprintf("encoder:%d,%d\n", index, clockwise);
+    return false;
+}
+
+void matrix_scan_user(void) {
+    static int cnt = 0;
+    if (cnt++ == 30) {
+        cnt = 0;
+        ecsm_dprint_matrix();
+    }
+}
+
+#include "rgblight.h"
+void keyboard_post_init_user(void) {
+    rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
+}
